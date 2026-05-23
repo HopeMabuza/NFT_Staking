@@ -12,15 +12,15 @@ describe("Test NFT Staking", function () {
     beforeEach(async function () {
         [owner, staker1, staker2] = await ethers.getSigners();
 
-        // Deploy NFT proxy
-        const NFT = await ethers.getContractFactory("NFT");
-        nft = await upgrades.deployProxy(NFT, ["ipfs://base-uri/"], { kind: "uups" });
-        await nft.waitForDeployment();
-
-        // Deploy RewardToken proxy
+        // Deploy RewardToken proxy first (NFT needs its address)
         const RewardToken = await ethers.getContractFactory("RewardToken");
         rewardToken = await upgrades.deployProxy(RewardToken, [], { kind: "uups" });
         await rewardToken.waitForDeployment();
+
+        // Deploy NFT proxy
+        const NFT = await ethers.getContractFactory("NFT");
+        nft = await upgrades.deployProxy(NFT, ["ipfs://base-uri/", await rewardToken.getAddress()], { kind: "uups" });
+        await nft.waitForDeployment();
 
         // Deploy Staking proxy
         const Staking = await ethers.getContractFactory("Staking");
